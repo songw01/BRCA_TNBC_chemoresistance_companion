@@ -1,1 +1,1 @@
-# BRCA_TNBC_chemoresistance_companion
+# BRCA TNBC chemoresistance companion codes

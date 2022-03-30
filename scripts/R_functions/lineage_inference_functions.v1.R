@@ -98,3 +98,49 @@ run_slingshot <- function(sce.subset,start.clus = NULL)
   
   return(output)
 }
+
+get_expression_violins <- function(sce,genes,cluster.order = NULL)
+{
+  genes = genes[genes %in% rowData(sce)$hgnc_symbol]
+  plst = vector("list",length(genes))
+  for (i in 1:length(genes))
+  {
+    gene_df = subset(rowData(sce),hgnc_symbol == genes[i])
+    gene.id = subset(rowData(sce),hgnc_symbol == genes[i])$Geneid
+    if (nrow(gene_df) > 1) gene.id = gene_df$Geneid[which.max(gene_df$total_counts)]
+    if (length(gene.id) == 1)
+    {
+      pobj = plotExpression(sce, features=gene.id,x = "cluster",exprs_values = "corrected_logcounts")
+      pobj = pobj + labs(y = paste(genes[i],sep = "")) + theme_bw() + 
+        theme(strip.background = element_blank(),strip.text.x = element_blank(),axis.text.x = element_text(angle = 45,vjust = 1,hjust = 1,size = 13),
+              axis.title.x = element_blank(),axis.title.y = element_text(size = 15))
+      if (!is.null(cluster.order)) pobj = pobj + scale_x_discrete(limits = cluster.order,labels = gsub("^CLS","C",cluster.order))
+      plst[[i]] = pobj
+      names(plst)[i] = paste(genes[i],"\nexpression",sep = "")
+    }
+  }
+  #plst = plst[!sapply(plst,is.null)]
+  return(plst)
+}
+
+read.geneSet <- function(geneSet.file)
+{
+  gene.list <- readLines(geneSet.file)
+  gene.list <- strsplit(gene.list,"\t")
+  
+  names(gene.list) <- sapply(gene.list,function(x) x[1])
+  gene.list <- lapply(gene.list,function(x) x[2:length(x)])
+  return(gene.list)
+}
+
+output.geneSet.file <- function(geneSet,outputfname)
+{
+  if (!is.list(geneSet)) stop("geneSet is not a list.")
+  if (is.null(names(geneSet))) stop("names(geneSet) is not defined properly.")
+  
+  sink(outputfname)
+  cat(paste(paste(names(geneSet),"\t",sapply(geneSet,function(x) paste(x,collapse = "\t")),sep = ""),collapse = "\n"))
+  sink()
+  
+  return(0)
+}
