@@ -7,7 +7,7 @@ library(slingshot)
 source("scripts/R_functions/lineage_inference_functions.v1.R")
 
 ########### load processed data
-sce = readRDS("C:/Users/songw01/Documents/BRCA_TNBC_scRNAseq_chemoresistance_v2/Data/SCE/SCE_object.final.RDS")
+sce = readRDS("Data/SCE_object.final.RDS")
 
 sce$exp.design = rename_func(paste(sce$clonal.persistence,sce$treatment,sep = "_"))
 sce$exp.design = factor(sce$exp.design,levels = c("SB","SM","SA","RB","RM","RA"))
@@ -54,13 +54,8 @@ if (TRUE)
   pval.cut = 0.05
   
   # now, get markers
-  #assayNames(sce)
-  marker.out <- findMarkers(x = sce, assay.type = "corrected_logcounts", groups=sce$cluster, direction = "up",lfc = log2(fc.cut))
-  marker.out <- lapply(marker.out,function(x,y) {out = x;
-  out$gene.symbol = y$hgnc_symbol[match(rownames(out),rownames(y))];
-  out$composite.id = paste(out$gene.symbol,rownames(out),sep = "|");
-  out$is_feature_control_Mt = y$is_feature_control_Mt[match(rownames(out),rownames(y))]
-  return(out)},y = rowData(sce))
+  marker.out = findMarkers(x = sce,assay.type = "corrected_logcounts",groups = sce$cluster,row.data = rowData(sce)[,c("Geneid","ensembl_transcript_id","hgnc_symbol","composite.id","is_feature_control_Mt")])
+  saveRDS(marker.out,file = "Data/Marker_Results.RDS")
   
   # update with CRISPRi hits
   chemo.sigs = read.geneSet("Data/brca_signature_library/chemo_resistance_compendium.gmt")
@@ -71,12 +66,12 @@ if (TRUE)
   zneg = setdiff(zneg,intc)
   zpos = setdiff(zpos,intc)
   
-  marker.out = lapply(marker.out,function(x,y) {out = x;out$is.ZNEG = out$gene.symbol %in% y;return(out)},y = zneg)
-  marker.out = lapply(marker.out,function(x,y) {out = x;out$is.ZPOS = out$gene.symbol %in% y;return(out)},y = zpos)
+  marker.out = lapply(marker.out,function(x,y) {out = x;out$is.ZNEG = out$jhgnc_symbol %in% y;return(out)},y = zneg)
+  marker.out = lapply(marker.out,function(x,y) {out = x;out$is.ZPOS = out$hgnc_symbol %in% y;return(out)},y = zpos)
   
   #  get markers
   marker.lst = lapply(marker.out,function(x) {
-    out = subset(x,(FDR < 0.05 & !is_feature_control_Mt))
+    out = subset(x,(FDR < 0.05 & !is_feature_control_Mt & summary.logFC > log2(1.2)))
     out = out[order(out$p.value),]
     #out = out[1:min(c(100,nrow(out))),]
     out$composite.id
