@@ -1,4 +1,4 @@
-### BRCA TNBC chemoresistance companion codes ###
+# BRCA TNBC chemoresistance companion codes 
 
 *Correspondence: Won-Min Song (won-min.song@mssm.edu or wonmin1984@gmail.com)*
 
@@ -11,7 +11,7 @@ library(synapserutils)
 synLogin('synapse_username', 'password') 
 files <- synapserutils::syncFromSynapse('syn28707254')
 
-# Code descriptions
+### Code descriptions
 Upon the download, the data must be unzipped under folder named *"Data".*
 
 Then, the R codes in '/scripts' folder, should be executed in the following order: 
